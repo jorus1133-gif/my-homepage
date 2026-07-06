@@ -1,0 +1,232 @@
+body {
+    background-color: #0f172a; 
+    color: white;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2vh;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* search area */
+.search-section {
+    margin-bottom: 10vh;
+    margin-left: 25vw;
+    text-align: start;
+}
+
+input {
+    padding: 3vh 5vw;
+    width: 30vw;
+    max-width: 400px;
+    min-width: 250px;
+    border-radius: 5vw;
+    border: none;
+    outline: none;
+    background: #1e293b;
+    color: white;
+    font-size: 3vh;
+    transition: transform 0.3s ease;
+    position: absolute;
+    left: 35vw
+}
+
+input:focus {
+    transform: scale(1.05);
+}
+
+/* the cards with info and jokes */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2vh;
+    width: 90vw;
+    max-width: 1200px;
+}
+
+.card {
+    background: #1e293b;
+    padding: 2.5vh;
+    border-radius: 25px;
+    text-align: center;
+    transition: all 0.4s ease;
+    cursor: pointer;
+    font-size: 1vw;
+}
+
+.card:hover {
+    transform: scale(0.98);
+    border-radius: 20px;
+    box-shadow: rgba(255, 196, 0, 0.486) 0px 0px 10px 5px;
+    background: linear-gradient(32deg, #912b2b, #778628);
+}
+
+.links-container {
+    position: absolute; 
+    top: 2vh;
+    left: 2vw;
+    width: 20vw;
+    display: flex;
+    flex-direction: column;
+    gap: 2vh;
+}
+
+#joke, #quote-text {
+    width: 100%; 
+    height: auto; 
+}
+
+#joke {
+   
+    background: linear-gradient(-45deg, #ee7752, #e73ca5, #23a6d5, #23d5ab);
+    background-size: 400% 400%; 
+    animation: gradientMove 15s ease infinite;
+}
+
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+#quote-text {
+    width: 20vw;
+
+    background: linear-gradient(-45deg, #fa1d1d, #e7643c, #d59723, #f7ad24);
+    background-size: 400% 400%; 
+    animation: gradientMove 5s ease infinite;
+}
+
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+#facts {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin:10px;
+    max-width: 25vw;
+    max-height: 30vh;
+    color: rgb(0, 0, 0);
+
+    background: linear-gradient(-45deg, #fabf1d, #89e73c, #30fc9d, #24f7e6);
+    background-size: 400% 400%; 
+    animation: gradientMove 30s ease infinite;
+}
+
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+#weather {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    margin:10px;
+    max-width: 25vw;
+    max-height: 30vh;
+}
+
+/* the clock with the time */
+
+#klok{
+    position: absolute;
+    top: 2vh;
+    font-size: 7vh
+}
+/* folder */
+/* folder with the backgrounds */
+.folder {
+    position: absolute;
+    display: inline-block;
+    left: 0.5vw;
+    bottom: 2vh;
+}
+
+.folder-btn {
+    background: linear-gradient(32deg, #1d293d, #1d353d, #1d3d2a, #333d1d);
+    color: white;
+    padding: 1vh 0.5vw;
+    border: none;
+    border-radius: 1vw;
+    cursor: pointer;
+    font-size: 1.3vw;
+    font-size:0px;
+    transition: all 0.3s ease-in-out;
+    opacity: 0.1;
+}
+
+.folder-options {
+    size: 10vw;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5vh;
+    margin-bottom: 0.5vh;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.folder:hover .folder-options {
+    opacity: 1;
+    visibility: visible;
+}
+.folder:hover .folder-btn {
+    font-size: 1.3vw;
+    opacity: 1;
+}
+
+.option-btn {
+    color: white;
+    padding: 2vh 2vw;
+    border: 1px solid #444;
+    border-radius: 0.5vh;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.option-btn:hover {
+    transform: scale(1.2);
+}
+
+/* bg class for moving gradient */
+.animatie {
+    background-size: 400% 400% !important;
+    animation: gradientMove 15s ease infinite !important;
+}
+
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* game */
+#game{
+    position:absolute;
+    opacity:0.009;
+    width: 1vw;
+    right:1vw;
+    bottom: 21vh
+}
