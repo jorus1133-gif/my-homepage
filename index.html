@@ -3,43 +3,412 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homepage</title>
-    <link rel="icon" type="image/x-icon" href="images/home.png">
-    <link rel="stylesheet" href="style.css">
+    <title>Neon Blade: Cyber Dash</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a12;
+            color: #fff;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        h1 {
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff, 0 0 20px #ff00ff;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+        #game-container { position: relative; }
+        canvas {
+            background: #101026;
+            border: 3px solid #ff00ff;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.2);
+            border-radius: 4px;
+        }
+        #hud {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 5px #00ffff;
+            pointer-events: none;
+        }
+        .slow-mo-indicator {
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff;
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse { from { opacity: 0.4; } to { opacity: 1; } }
+        #menu {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 18, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        .btn {
+            background: transparent;
+            color: #00ffff;
+            border: 2px solid #00ffff;
+            padding: 12px 35px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background: #00ffff;
+            color: #0a0a12;
+            box-shadow: 0 0 25px #00ffff;
+        }
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <div class="search-section">
-            <form id="search-form">
-                <input type="text" id="search-input" placeholder="Zoeken op Google...">
-            </form>
+
+    <h1>NEON BLADE: CYBER DASH</h1>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="900" height="450"></canvas>
+        <div id="hud">
+            <div>KILLS: <span id="score">0</span></div>
+            <div id="slowmo-text" class="slow-mo-indicator hidden">>> SLOW MOTION ACTIEF <<</div>
+        </div>
+        <div id="menu">
+            <h2 style="color: #ff00ff; text-shadow: 0 0 10px #ff00ff;">NEON ROOFTOPS</h2>
+            <p style="color: #aaa; margin-top: 10px; text-align: center; max-width: 400px; font-size: 0.9rem; line-height: 1.6;">
+                <b>[A][D] / [Pijltjes Links/Rechts]</b> = Bewegen<br>
+                <b>[SPATIEBALK] / [Pijltje Omhoog]</b> = Springen<br>
+                <b>[SHIFT] + Richting</b> = **CYBER DASH** (Vernietig vijanden!)
+            </p>
+            <button class="btn" id="start-btn">INFILTREREN</button>
+        </div>
     </div>
 
-    <div class="grid-container">
-         <div class="card" id="weather">Laden...</div>
-         <div class="card" id="facts">Laden...</div>
-    </div>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const menu = document.getElementById("menu");
+        const startBtn = document.getElementById("start-btn");
+        const slowmoText = document.getElementById("slowmo-text");
 
-    </div>
+        let gameRunning = false;
+        let score = 0;
+        let timeScale = 1.0; 
+        let lastTime = 0;
 
-     <div class="links-container">
-        <div id="joke" class="card">...</div>
-        <div id="quote-text" class="card">...</div>
-    </div>
+        // Physics gebaseerd op een basis van 60fps (dt = 1)
+        const gravity = 0.5;
+        let platforms = [];
+        let cameraX = 0;
 
-    <div id="klok">00:00:00</div>
+        // Snelheden zijn nu aangepast naar pixels per frame (op 60fps basis)
+        const player = {
+            x: 50, y: 100, w: 20, h: 35,
+            vx: 0, vy: 0,
+            speed: 5, jumpForce: 11,
+            grounded: false,
+            isDashing: false, 
+            dashTimer: 0,      // in seconden
+            dashCooldown: 0,   // in seconden
+            dashDirX: 0,
+            dashSpeed: 16
+        };
 
-    <a id ="game" href="game/index.html" class="card">🪬</a>
-    
-    <div class="folder">
-    <button class="folder-btn">📁 Achtergrond</button>
-    <div class="folder-options">
-        <button class="option-btn" id="btn-style-1">🪨 </button>
-        <button class="option-btn" id="btn-style-2">✨ </button>
-        <button class="option-btn" id="btn-style-3">🌑 </button>
-    </div>
-    </div>
+        let enemies = [];
+        let particles = [];
+        let bullets = [];
+        let keys = {};
 
-    <script src="script.js"></script>
+        window.addEventListener('keydown', e => {
+            keys[e.key] = true;
+            if (e.key === " ") e.preventDefault(); 
+        });
+        window.addEventListener('keyup', e => {
+            keys[e.key] = false;
+            if (e.key === " ") e.preventDefault();
+        });
+        startBtn.addEventListener('click', startGame);
+
+        function initLevel() {
+            platforms = [
+                { x: 0, y: 380, w: 300, h: 70 },
+                { x: 380, y: 300, w: 250, h: 150 },
+                { x: 700, y: 350, w: 300, h: 100 },
+                { x: 1100, y: 260, w: 280, h: 200 }
+            ];
+            enemies = [];
+            bullets = [];
+            particles = [];
+            
+            platforms.forEach((p, index) => {
+                if (index > 0) { 
+                    enemies.push({
+                        x: p.x + p.w / 2, y: p.y - 30, w: 20, h: 30,
+                        shootCooldown: Math.random() * 1.0, // nu in seconden
+                        patrolRange: p.w / 3, startX: p.x + p.w / 2, dir: 1
+                    });
+                }
+            });
+        }
+
+        function startGame() {
+            menu.classList.add("hidden");
+            score = 0;
+            document.getElementById("score").innerText = score;
+            cameraX = 0;
+            player.x = 50; player.y = 100; player.vx = 0; player.vy = 0;
+            player.isDashing = false;
+            player.dashCooldown = 0;
+            
+            initLevel();
+            gameRunning = true;
+            lastTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function createParticles(x, y, color, count=10) {
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    alpha: 1, size: Math.random() * 3 + 2,
+                    color: color
+                });
+            }
+        }
+
+        function updateGame(dt) {
+            // SLOW-MOTION TRIGGER
+            let bulletClose = bullets.some(b => Math.hypot(b.x - player.x, b.y - player.y) < 100);
+            if (bulletClose && !player.isDashing) {
+                timeScale = 0.3;
+                slowmoText.classList.remove("hidden");
+            } else {
+                timeScale = 1.0;
+                slowmoText.classList.add("hidden");
+            }
+
+            // dtModifier zorgt dat 60fps gelijk staat aan dtModifier = 1
+            let dtModifier = dt * 60 * timeScale;
+
+            // Cooldowns (in seconden, dus verminderen met dt * timeScale)
+            if (player.dashCooldown > 0) player.dashCooldown -= dt * timeScale;
+
+            // DASH MECHANIC ACTIVEREN
+            if ((keys['Shift'] || keys['shift']) && player.dashCooldown <= 0 && !player.isDashing) {
+                let moveX = 0;
+                if (keys['ArrowRight'] || keys['d']) moveX = 1;
+                if (keys['ArrowLeft'] || keys['a']) moveX = -1;
+                if (moveX === 0) moveX = 1;
+
+                player.isDashing = true;
+                player.dashTimer = 0.16;    // Dash duurt exact 0.16 seconden
+                player.dashCooldown = 0.75; // Cooldown van 0.75 seconden
+                player.dashDirX = moveX;
+                player.vy = 0;
+                createParticles(player.x, player.y + 15, '#ff00ff', 15);
+            }
+
+            // BEWEGING PLAYER
+            if (player.isDashing) {
+                player.vx = player.dashDirX * player.dashSpeed;
+                player.dashTimer -= dt * timeScale;
+                if (player.dashTimer <= 0) {
+                    player.isDashing = false;
+                    player.vx = 0;
+                }
+                if (Math.random() < 0.4) createParticles(player.x, player.y + 17, '#00ffff', 2);
+            } else {
+                if (keys['ArrowRight'] || keys['d']) player.vx = player.speed;
+                else if (keys['ArrowLeft'] || keys['a']) player.vx = -player.speed;
+                else player.vx = 0;
+
+                // SPRINGEN
+                if ((keys[' '] || keys['ArrowUp']) && player.grounded) {
+                    player.vy = -player.jumpForce;
+                    player.grounded = false;
+                    createParticles(player.x + 10, player.y + 35, '#00ffff', 5);
+                }
+                player.vy += gravity * dtModifier;
+            }
+
+            // Posities toepassen gebaseerd op de tijdstap
+            player.x += player.vx * dtModifier;
+            player.y += player.vy * dtModifier;
+
+            // PLATFORM COLLISION
+            player.grounded = false;
+            platforms.forEach(p => {
+                if (player.x + player.w > p.x && player.x < p.x + p.w &&
+                    player.y + player.h >= p.y && player.y + player.h - player.vy * dtModifier <= p.y + 12) {
+                    player.y = p.y - player.h;
+                    player.vy = 0;
+                    player.grounded = true;
+                }
+            });
+
+            // CAMERA VOLGT PLAYER
+            cameraX += ((player.x - canvas.width / 3) - cameraX) * 0.1 * dtModifier;
+
+            // KOGELS UPDATEN
+            for(let i = bullets.length - 1; i >= 0; i--) {
+                let b = bullets[i];
+                b.x += b.vx * dtModifier;
+                b.y += b.vy * dtModifier;
+                
+                if (b.x > player.x && b.x < player.x + player.w && b.y > player.y && b.y < player.y + player.h) {
+                    if (player.isDashing) {
+                        bullets.splice(i, 1);
+                        createParticles(b.x, b.y, '#ffff00', 4);
+                        continue;
+                    } else {
+                        createParticles(player.x + 10, player.y + 15, '#ff0033', 30);
+                        gameRunning = false;
+                        setTimeout(() => { menu.classList.remove("hidden"); }, 800);
+                    }
+                }
+                if (Math.abs(b.x - player.x) > 1000) bullets.splice(i, 1);
+            }
+
+            // VIJANDEN UPDATEN
+            for (let index = enemies.length - 1; index >= 0; index--) {
+                let e = enemies[index];
+                e.x += e.dir * 1 * dtModifier;
+                if (Math.abs(e.x - e.startX) > e.patrolRange) e.dir *= -1;
+
+                e.shootCooldown -= dt * timeScale;
+                if (e.shootCooldown <= 0 && Math.abs(e.x - player.x) < 400) {
+                    let angle = Math.atan2(player.y + 10 - e.y, player.x - e.x);
+                    bullets.push({
+                        x: e.x, y: e.y + 10,
+                        vx: Math.cos(angle) * 6,
+                        vy: Math.sin(angle) * 6
+                    });
+                    e.shootCooldown = 1.2 + Math.random() * 0.8; 
+                }
+
+                if (player.isDashing && player.x + player.w > e.x && player.x < e.x + e.w &&
+                    player.y + player.h > e.y && player.y < e.y + e.h) {
+                    createParticles(e.x + 10, e.y + 15, '#ff00ff', 20);
+                    enemies.splice(index, 1);
+                    score += 1;
+                    document.getElementById("score").innerText = score;
+                }
+            }
+
+            // PARTICLES UPDATEN
+            for(let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx * dtModifier;
+                p.y += p.vy * dtModifier;
+                p.alpha -= 0.03 * dtModifier;
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
+
+            // Oneindige map genereren
+            if (platforms.length > 0) {
+                let lastPlatform = platforms[platforms.length - 1];
+                if (player.x > lastPlatform.x - 600) {
+                    let nextW = 200 + Math.random() * 150;
+                    let nextX = lastPlatform.x + lastPlatform.w + 80 + Math.random() * 100;
+                    let nextY = 220 + Math.random() * 160;
+                    platforms.push({ x: nextX, y: nextY, w: nextW, h: 200 });
+                    enemies.push({
+                        x: nextX + nextW / 2, y: nextY - 30, w: 20, h: 30,
+                        shootCooldown: 0.8, patrolRange: nextW / 4, startX: nextX + nextW / 2, dir: 1
+                    });
+                }
+            }
+
+            // Afgrond check
+            if (player.y > canvas.height + 50) {
+                gameRunning = false;
+                menu.classList.remove("hidden");
+            }
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(-cameraX, 0);
+
+            // 1. ACHTERGROND
+            ctx.fillStyle = "rgba(255, 0, 255, 0.03)";
+            platforms.forEach(p => {
+                ctx.fillRect(p.x * 0.7, p.y - 100, p.w, 400);
+            });
+
+            // 2. PLATFORMS
+            platforms.forEach(p => {
+                ctx.fillStyle = "#161633";
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.strokeStyle = "#00ffff";
+                ctx.lineWidth = 3;
+                ctx.strokeRect(p.x, p.y, p.w, p.h);
+            });
+
+            // 3. VIJANDEN
+            enemies.forEach(e => {
+                ctx.fillStyle = "#ff3333";
+                ctx.fillRect(e.x, e.y, e.w, e.h);
+                ctx.fillStyle = "#fff";
+                ctx.fillRect(e.x + (e.dir > 0 ? 12 : 4), e.y + 5, 4, 4);
+            });
+
+            // 4. BULLETS
+            bullets.forEach(b => {
+                ctx.fillStyle = "#ffff00";
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = "#ffff00";
+                ctx.fillRect(b.x, b.y, 8, 4);
+                ctx.shadowBlur = 0;
+            });
+
+            // 5. DEELTJES
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.alpha;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            });
+            ctx.globalAlpha = 1.0;
+
+            // 6. SPELER
+            ctx.shadowBlur = player.isDashing ? 20 : 5;
+            ctx.shadowColor = player.isDashing ? "#ff00ff" : "#00ffff";
+            ctx.fillStyle = player.isDashing ? "#ff00ff" : "#00ffff";
+            ctx.fillRect(player.x, player.y, player.w, player.h);
+            ctx.shadowBlur = 0;
+
+            ctx.restore();
+        }
+
+        function gameLoop(now) {
+            if (!gameRunning) return;
+            
+            // Bereken de exacte delta time in seconden
+            let dt = (now - lastTime) / 1000;
+            if (dt > 0.1) dt = 0.1; // Voorkom extreme sprongen bij lag spikes
+            lastTime = now;
+
+            updateGame(dt);
+            drawGame();
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
 </body>
 </html>
