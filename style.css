@@ -162,7 +162,6 @@ input:focus {
     font-size: 1.3vw;
     font-size:0px;
     transition: all 0.3s ease-in-out;
-    opacity: 0.1;
 }
 
 .folder-options {
@@ -180,7 +179,6 @@ input:focus {
 }
 
 .folder:hover .folder-options {
-    opacity: 1;
     visibility: visible;
 }
 .folder:hover .folder-btn {
