@@ -159,8 +159,7 @@ input:focus {
     border: none;
     border-radius: 1vw;
     cursor: pointer;
-    font-size: 1.3vw;
-    font-size:0px;
+    font-size:1vw;
     transition: all 0.3s ease-in-out;
 }
 
@@ -183,7 +182,6 @@ input:focus {
 }
 .folder:hover .folder-btn {
     font-size: 1.3vw;
-    opacity: 1;
 }
 
 .option-btn {
