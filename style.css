@@ -180,6 +180,7 @@ input:focus {
 
 .folder:hover .folder-options {
     visibility: visible;
+    opacity: 1;
 }
 .folder:hover .folder-btn {
     font-size: 1.3vw;
