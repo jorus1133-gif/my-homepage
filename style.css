@@ -150,6 +150,7 @@ input:focus {
     display: inline-block;
     left: 0.5vw;
     bottom: 2vh;
+    font-size: 1vw;
 }
 
 .folder-btn {
@@ -159,7 +160,7 @@ input:focus {
     border: none;
     border-radius: 1vw;
     cursor: pointer;
-    font-size:1vw;
+    font-size: 1vw;
     transition: all 0.3s ease-in-out;
 }
 
