@@ -226,6 +226,6 @@ input:focus {
     opacity:0.009;
     width: 2vw;
     right:2vw;
-    bottom: 18vh;
+    bottom: 20vh;
     background: radial-gradient(circle at bottom, #510053, #320061, #00054b, #000000);
 }
