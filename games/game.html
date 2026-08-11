@@ -41,6 +41,12 @@
             text-shadow: 0 0 5px #00ffff;
             pointer-events: none;
         }
+        #hud div { margin-bottom: 4px; }
+        #hud .hs {
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff;
+            font-size: 1rem;
+        }
         .slow-mo-indicator {
             color: #ff00ff;
             text-shadow: 0 0 5px #ff00ff;
@@ -75,6 +81,20 @@
             box-shadow: 0 0 25px #00ffff;
         }
         .hidden { display: none !important; }
+        #menu-highscore {
+            color: #ff00ff;
+            text-shadow: 0 0 8px #ff00ff;
+            font-size: 1.1rem;
+            margin-top: 14px;
+            letter-spacing: 1px;
+        }
+        #new-highscore-banner {
+            color: #ffff00;
+            text-shadow: 0 0 10px #ffff00;
+            font-size: 1rem;
+            margin-top: 6px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -85,6 +105,7 @@
         <canvas id="gameCanvas" width="900" height="450"></canvas>
         <div id="hud">
             <div>KILLS: <span id="score">0</span></div>
+            <div class="hs">HIGHSCORE: <span id="highscore">0</span></div>
             <div id="slowmo-text" class="slow-mo-indicator hidden">>> SLOW MOTION ACTIEF <<</div>
         </div>
         <div id="menu">
@@ -94,6 +115,8 @@
                 <b>[SPATIEBALK] / [Pijltje Omhoog]</b> = Springen<br>
                 <b>[SHIFT] + Richting</b> = **CYBER DASH** (Vernietig vijanden!)
             </p>
+            <div id="menu-highscore">HIGHSCORE: <span id="menu-highscore-value">0</span></div>
+            <div id="new-highscore-banner" class="hidden">★ NIEUWE HIGHSCORE! ★</div>
             <button class="btn" id="start-btn">INFILTREREN</button>
         </div>
     </div>
@@ -104,11 +127,53 @@
         const menu = document.getElementById("menu");
         const startBtn = document.getElementById("start-btn");
         const slowmoText = document.getElementById("slowmo-text");
+        const menuHighscoreBanner = document.getElementById("new-highscore-banner");
 
         let gameRunning = false;
         let score = 0;
+        let highscore = 0;
         let timeScale = 1.0; 
         let lastTime = 0;
+
+        // ---- HIGHSCORE OPSLAG (persistent via window.storage, geen localStorage) ----
+        const HS_KEY = 'neon_blade_highscore';
+
+        async function loadHighscore() {
+            try {
+                const result = await window.storage.get(HS_KEY, false);
+                highscore = result ? (parseInt(result.value, 10) || 0) : 0;
+            } catch (err) {
+                // Key bestaat nog niet of opslag faalt: gewoon bij 0 beginnen
+                highscore = 0;
+            }
+            updateHighscoreDisplays();
+        }
+
+        async function saveHighscore(newValue) {
+            try {
+                const result = await window.storage.set(HS_KEY, String(newValue), false);
+                if (!result) console.error('Highscore opslaan is mislukt');
+            } catch (err) {
+                console.error('Highscore opslag fout:', err);
+            }
+        }
+
+        function updateHighscoreDisplays() {
+            document.getElementById("highscore").innerText = highscore;
+            document.getElementById("menu-highscore-value").innerText = highscore;
+        }
+
+        async function handleGameOver() {
+            gameRunning = false;
+            if (score > highscore) {
+                highscore = score;
+                updateHighscoreDisplays();
+                menuHighscoreBanner.classList.remove("hidden");
+                await saveHighscore(highscore);
+            } else {
+                menuHighscoreBanner.classList.add("hidden");
+            }
+        }
 
         // Physics gebaseerd op een basis van 60fps (dt = 1)
         const gravity = 0.5;
@@ -167,6 +232,7 @@
 
         function startGame() {
             menu.classList.add("hidden");
+            menuHighscoreBanner.classList.add("hidden");
             score = 0;
             document.getElementById("score").innerText = score;
             cameraX = 0;
@@ -278,7 +344,7 @@
                         continue;
                     } else {
                         createParticles(player.x + 10, player.y + 15, '#ff0033', 30);
-                        gameRunning = false;
+                        handleGameOver();
                         setTimeout(() => { menu.classList.remove("hidden"); }, 800);
                     }
                 }
@@ -308,6 +374,10 @@
                     enemies.splice(index, 1);
                     score += 1;
                     document.getElementById("score").innerText = score;
+                    if (score > highscore) {
+                        highscore = score;
+                        updateHighscoreDisplays();
+                    }
                 }
             }
 
@@ -337,7 +407,7 @@
 
             // Afgrond check
             if (player.y > canvas.height + 50) {
-                gameRunning = false;
+                handleGameOver();
                 menu.classList.remove("hidden");
             }
         }
@@ -409,6 +479,9 @@
             drawGame();
             requestAnimationFrame(gameLoop);
         }
+
+        // Highscore laden zodra de pagina opent
+        loadHighscore();
     </script>
 </body>
 </html>
