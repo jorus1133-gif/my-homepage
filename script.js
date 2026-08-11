@@ -2,6 +2,7 @@ const body = document.body;
 const searchForm = document.getElementById('search-form');
 const searchInput = document.getElementById('search-input');
 const klok = document.getElementById('klok');
+const game = document.getElementById('game');
 
 const btnStyle1 = document.getElementById('btn-style-1');
 const btnStyle2 = document.getElementById('btn-style-2');
@@ -64,7 +65,11 @@ searchForm.addEventListener('submit', (e) => {
     if (query === 'clear') {
         localStorage.clear();
         window.location.reload();
-    } else if (query) {
+    }
+    else if (query === 'wasd') {
+        game.style.opacity = 1;
+    }
+    else if (query) {
         window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
     }
 });
