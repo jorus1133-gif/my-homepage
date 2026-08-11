@@ -224,7 +224,8 @@ input:focus {
 #game{
     position:absolute;
     opacity:0.009;
-    width: 1vw;
-    right:1vw;
-    bottom: 21vh
+    width: 2vw;
+    right:2vw;
+    bottom: 18vh;
+    background: radial-gradient(circle at bottom, #510053, #320061, #00054b, #000000);
 }
