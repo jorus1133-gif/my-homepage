@@ -14,7 +14,7 @@ const animatieGradient2 = 'linear-gradient(32deg, #1d293d, #1d353d, #1d3d2a, #33
 body.style.background = localStorage.getItem('bg-body') || '#0f172a'; 
 btnStyle1.style.background = localStorage.getItem('bg-btn1') || animatieGradient1; 
 btnStyle2.style.background = localStorage.getItem('bg-btn2') || animatieGradient2; 
-btnStyle3.style.background = localStorage.getItem('bg-btn3') || 'url("https://raw.githubusercontent.com/jorus1133-gif/my-homepage/refs/heads/main/images/mcbg.png") center / cover no-repeat';
+btnStyle3.style.background = localStorage.getItem('bg-btn3') || 'images/mcbg.png center / cover no-repeat';
 
 // gives css class to animation owner
 function updateAnimatieKlasse() {
