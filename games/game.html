@@ -131,31 +131,17 @@
 
         let gameRunning = false;
         let score = 0;
-        let highscore = 0;
+        let highscore = parseInt(localStorage.getItem('highscore'), 10) || 0;
         let timeScale = 1.0; 
         let lastTime = 0;
 
-        // ---- HIGHSCORE OPSLAG (persistent via window.storage, geen localStorage) ----
-        const HS_KEY = 'neon_blade_highscore';
-
-        async function loadHighscore() {
-            try {
-                const result = await window.storage.get(HS_KEY, false);
-                highscore = result ? (parseInt(result.value, 10) || 0) : 0;
-            } catch (err) {
-                // Key bestaat nog niet of opslag faalt: gewoon bij 0 beginnen
-                highscore = 0;
-            }
-            updateHighscoreDisplays();
+        function saveHighscore(newScore) {
+            localStorage.setItem('highscore', newScore);
         }
 
-        async function saveHighscore(newValue) {
-            try {
-                const result = await window.storage.set(HS_KEY, String(newValue), false);
-                if (!result) console.error('Highscore opslaan is mislukt');
-            } catch (err) {
-                console.error('Highscore opslag fout:', err);
-            }
+        function loadHighscore() {
+            highscore = parseInt(localStorage.getItem('highscore'), 10) || 0;
+            updateHighscoreDisplays();
         }
 
         function updateHighscoreDisplays() {
@@ -163,32 +149,30 @@
             document.getElementById("menu-highscore-value").innerText = highscore;
         }
 
-        async function handleGameOver() {
+        function handleGameOver() {
             gameRunning = false;
             if (score > highscore) {
                 highscore = score;
+                saveHighscore(highscore);
                 updateHighscoreDisplays();
                 menuHighscoreBanner.classList.remove("hidden");
-                await saveHighscore(highscore);
             } else {
                 menuHighscoreBanner.classList.add("hidden");
             }
         }
 
-        // Physics gebaseerd op een basis van 60fps (dt = 1)
         const gravity = 0.5;
         let platforms = [];
         let cameraX = 0;
 
-        // Snelheden zijn nu aangepast naar pixels per frame (op 60fps basis)
         const player = {
             x: 50, y: 100, w: 20, h: 35,
             vx: 0, vy: 0,
             speed: 5, jumpForce: 11,
             grounded: false,
             isDashing: false, 
-            dashTimer: 0,      // in seconden
-            dashCooldown: 0,   // in seconden
+            dashTimer: 0,
+            dashCooldown: 0,
             dashDirX: 0,
             dashSpeed: 16
         };
@@ -223,7 +207,7 @@
                 if (index > 0) { 
                     enemies.push({
                         x: p.x + p.w / 2, y: p.y - 30, w: 20, h: 30,
-                        shootCooldown: Math.random() * 1.0, // nu in seconden
+                        shootCooldown: Math.random() * 1.0,
                         patrolRange: p.w / 3, startX: p.x + p.w / 2, dir: 1
                     });
                 }
@@ -259,7 +243,6 @@
         }
 
         function updateGame(dt) {
-            // SLOW-MOTION TRIGGER
             let bulletClose = bullets.some(b => Math.hypot(b.x - player.x, b.y - player.y) < 100);
             if (bulletClose && !player.isDashing) {
                 timeScale = 0.3;
@@ -269,13 +252,10 @@
                 slowmoText.classList.add("hidden");
             }
 
-            // dtModifier zorgt dat 60fps gelijk staat aan dtModifier = 1
             let dtModifier = dt * 60 * timeScale;
 
-            // Cooldowns (in seconden, dus verminderen met dt * timeScale)
             if (player.dashCooldown > 0) player.dashCooldown -= dt * timeScale;
 
-            // DASH MECHANIC ACTIVEREN
             if ((keys['Shift'] || keys['shift']) && player.dashCooldown <= 0 && !player.isDashing) {
                 let moveX = 0;
                 if (keys['ArrowRight'] || keys['d']) moveX = 1;
@@ -283,14 +263,13 @@
                 if (moveX === 0) moveX = 1;
 
                 player.isDashing = true;
-                player.dashTimer = 0.16;    // Dash duurt exact 0.16 seconden
-                player.dashCooldown = 0.75; // Cooldown van 0.75 seconden
+                player.dashTimer = 0.16;
+                player.dashCooldown = 0.75;
                 player.dashDirX = moveX;
                 player.vy = 0;
                 createParticles(player.x, player.y + 15, '#ff00ff', 15);
             }
 
-            // BEWEGING PLAYER
             if (player.isDashing) {
                 player.vx = player.dashDirX * player.dashSpeed;
                 player.dashTimer -= dt * timeScale;
@@ -304,7 +283,6 @@
                 else if (keys['ArrowLeft'] || keys['a']) player.vx = -player.speed;
                 else player.vx = 0;
 
-                // SPRINGEN
                 if ((keys[' '] || keys['ArrowUp']) && player.grounded) {
                     player.vy = -player.jumpForce;
                     player.grounded = false;
@@ -313,11 +291,9 @@
                 player.vy += gravity * dtModifier;
             }
 
-            // Posities toepassen gebaseerd op de tijdstap
             player.x += player.vx * dtModifier;
             player.y += player.vy * dtModifier;
 
-            // PLATFORM COLLISION
             player.grounded = false;
             platforms.forEach(p => {
                 if (player.x + player.w > p.x && player.x < p.x + p.w &&
@@ -328,10 +304,8 @@
                 }
             });
 
-            // CAMERA VOLGT PLAYER
             cameraX += ((player.x - canvas.width / 3) - cameraX) * 0.1 * dtModifier;
 
-            // KOGELS UPDATEN
             for(let i = bullets.length - 1; i >= 0; i--) {
                 let b = bullets[i];
                 b.x += b.vx * dtModifier;
@@ -351,7 +325,6 @@
                 if (Math.abs(b.x - player.x) > 1000) bullets.splice(i, 1);
             }
 
-            // VIJANDEN UPDATEN
             for (let index = enemies.length - 1; index >= 0; index--) {
                 let e = enemies[index];
                 e.x += e.dir * 1 * dtModifier;
@@ -376,12 +349,12 @@
                     document.getElementById("score").innerText = score;
                     if (score > highscore) {
                         highscore = score;
+                        saveHighscore(highscore);
                         updateHighscoreDisplays();
                     }
                 }
             }
 
-            // PARTICLES UPDATEN
             for(let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
                 p.x += p.vx * dtModifier;
@@ -390,7 +363,6 @@
                 if (p.alpha <= 0) particles.splice(i, 1);
             }
 
-            // Oneindige map genereren
             if (platforms.length > 0) {
                 let lastPlatform = platforms[platforms.length - 1];
                 if (player.x > lastPlatform.x - 600) {
@@ -405,7 +377,6 @@
                 }
             }
 
-            // Afgrond check
             if (player.y > canvas.height + 50) {
                 handleGameOver();
                 menu.classList.remove("hidden");
@@ -417,13 +388,11 @@
             ctx.save();
             ctx.translate(-cameraX, 0);
 
-            // 1. ACHTERGROND
             ctx.fillStyle = "rgba(255, 0, 255, 0.03)";
             platforms.forEach(p => {
                 ctx.fillRect(p.x * 0.7, p.y - 100, p.w, 400);
             });
 
-            // 2. PLATFORMS
             platforms.forEach(p => {
                 ctx.fillStyle = "#161633";
                 ctx.fillRect(p.x, p.y, p.w, p.h);
@@ -432,7 +401,6 @@
                 ctx.strokeRect(p.x, p.y, p.w, p.h);
             });
 
-            // 3. VIJANDEN
             enemies.forEach(e => {
                 ctx.fillStyle = "#ff3333";
                 ctx.fillRect(e.x, e.y, e.w, e.h);
@@ -440,7 +408,6 @@
                 ctx.fillRect(e.x + (e.dir > 0 ? 12 : 4), e.y + 5, 4, 4);
             });
 
-            // 4. BULLETS
             bullets.forEach(b => {
                 ctx.fillStyle = "#ffff00";
                 ctx.shadowBlur = 8;
@@ -449,7 +416,6 @@
                 ctx.shadowBlur = 0;
             });
 
-            // 5. DEELTJES
             particles.forEach(p => {
                 ctx.fillStyle = p.color;
                 ctx.globalAlpha = p.alpha;
@@ -457,7 +423,6 @@
             });
             ctx.globalAlpha = 1.0;
 
-            // 6. SPELER
             ctx.shadowBlur = player.isDashing ? 20 : 5;
             ctx.shadowColor = player.isDashing ? "#ff00ff" : "#00ffff";
             ctx.fillStyle = player.isDashing ? "#ff00ff" : "#00ffff";
@@ -470,9 +435,8 @@
         function gameLoop(now) {
             if (!gameRunning) return;
             
-            // Bereken de exacte delta time in seconden
             let dt = (now - lastTime) / 1000;
-            if (dt > 0.1) dt = 0.1; // Voorkom extreme sprongen bij lag spikes
+            if (dt > 0.1) dt = 0.1;
             lastTime = now;
 
             updateGame(dt);
@@ -480,7 +444,6 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Highscore laden zodra de pagina opent
         loadHighscore();
     </script>
 </body>
