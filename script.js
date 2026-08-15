@@ -9,7 +9,7 @@ const btnStyle2 = document.getElementById('btn-style-2');
 const btnStyle3 = document.getElementById('btn-style-3');
 
 const animatieGradient1 = 'radial-gradient(circle, #fa1d1d, #e7643c, #d59723, #f7ad24)';
-const animatieGradient2 = 'linear-gradient(32deg, #1d293d, #1d353d, #1d3d2a, #333d1d)';
+const animatieGradient2 = 'linear-gradient(32deg, #181e42, #123541, #1c440f, #333d1d)';
 
 body.style.background = localStorage.getItem('bg-body') || '#0f172a'; 
 btnStyle1.style.background = localStorage.getItem('bg-btn1') || animatieGradient1; 
@@ -19,7 +19,7 @@ btnStyle3.style.background = localStorage.getItem('bg-btn3') || 'url("images/mcb
 // gives css class to animation owner
 function updateAnimatieKlasse() {
     [body, btnStyle1, btnStyle2, btnStyle3].forEach(element => {
-        if (element.style.background.includes('250, 29, 29') || element.style.background.includes('#fa1d1d')|| element.style.background.includes('29, 41, 61') || element.style.background.includes('#1f293d')) {
+        if (element.style.background.includes('250, 29, 29') || element.style.background.includes('#fa1d1d')|| element.style.background.includes('24, 30, 66') || element.style.background.includes('#181e42')) {
             element.classList.add('animatie');
         } else {
             element.classList.remove('animatie');
