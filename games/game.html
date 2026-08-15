@@ -363,12 +363,18 @@
                 if (p.alpha <= 0) particles.splice(i, 1);
             }
 
-            if (platforms.length > 0) {
+                       if (platforms.length > 0) {
                 let lastPlatform = platforms[platforms.length - 1];
                 if (player.x > lastPlatform.x - 600) {
                     let nextW = 200 + Math.random() * 150;
                     let nextX = lastPlatform.x + lastPlatform.w + 80 + Math.random() * 100;
-                    let nextY = 220 + Math.random() * 160;
+
+                    const minY = 180;                 
+                    const maxY = canvas.height - 80;
+                    let yDiff = (Math.random() * 160) - 80;
+                    let nextY = lastPlatform.y + yDiff;
+                    nextY = Math.max(minY, Math.min(maxY, nextY));
+                    
                     platforms.push({ x: nextX, y: nextY, w: nextW, h: 200 });
                     enemies.push({
                         x: nextX + nextW / 2, y: nextY - 30, w: 20, h: 30,
