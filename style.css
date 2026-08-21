@@ -59,7 +59,7 @@ input:focus {
 }
 
 .card:hover {
-    transform: scale(1.05);
+    transform: scale(1.1);
     border-radius: 20px;
     box-shadow: rgba(0, 0, 0, 0.486) 5px 5px 10px 5px;
 }
